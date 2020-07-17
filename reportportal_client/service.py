@@ -161,6 +161,13 @@ def uri_join(*uri_parts):
 class ReportPortalService(object):
     """Service class with report portal event callbacks."""
 
+    # Status mapping to translate Robot Framework status to one recognised by Report Portal
+    status_mapping = {
+        "PASS": "PASSED",
+        "FAIL": "FAILED",
+        "SKIP": "SKIPPED"
+    }
+
     def __init__(self,
                  endpoint,
                  project,
