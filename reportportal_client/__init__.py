@@ -25,7 +25,7 @@ POST_LOGBATCH_RETRY_COUNT = 10
 endpoint = "http://report-portal.idbs-dev.com"
 project = "tara_integration"
 # You can get UUID from user profile page in the Report Portal.
-token = "42c4195e-ecea-44f7-af51-09e861516863"
+token = "TOKEN"
 launch_name = "RF Test launch"
 launch_doc = "Testing RF tests."
 launch_time = str(int(time() * 1000))
@@ -88,8 +88,11 @@ class reportportal_client:
         # Check for Parent item ID
         parent = self.find_parent_suite_for_test(name)
 
+        # Add tags to RP attributes (RP only accepts dictionary of attributes)
+        tags_dict = {'tags': attributes['tags']}
+
         # Start test item
-        self.test_id = self.rp_service.start_test_item(name, self.now(), "TEST", parent_item_id=parent)
+        self.test_id = self.rp_service.start_test_item(name, self.now(), "TEST", description=attributes['doc'], attributes=tags_dict, parent_item_id=parent)
 
 
     def end_test(self, name, attributes):
