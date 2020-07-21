@@ -16,16 +16,17 @@ limitations under the License.
 
 from .service import ReportPortalService
 from time import time
+import config
 
 __all__ = ('ReportPortalService',)
 
 
 POST_LOGBATCH_RETRY_COUNT = 10
 
-endpoint = "http://report-portal.idbs-dev.com"
+endpoint = config.endpoint
 project = "tara_integration"
 # You can get UUID from user profile page in the Report Portal.
-token = "TOKEN"
+token = config.token
 launch_name = "RF Test launch"
 launch_doc = "Testing RF tests."
 launch_time = str(int(time() * 1000))
@@ -35,17 +36,20 @@ class reportportal_client:
 
     ROBOT_LISTENER_API_VERSION = 2
 
-    def __init__(self):
+    def __init__(self, scenario=True, launch_id=None):
 
-        self.rp_service = ReportPortalService(endpoint, project, token)
-        self.rp_service.start_launch(launch_name, launch_time, launch_doc)
+        if scenario and launch_id is None:
+            self.rp_service = ReportPortalService(endpoint, project, token)
+            self.launch_id = self.rp_service.start_launch(launch_name, launch_time, launch_doc)
 
-        # Not sure what this is for
-        self.test_id = None
-        self.suite_id = None
+            # Not sure what this is for
+            self.test_id = None
+            self.suite_id = None
 
-        # List for scenario info
-        self.scenario_info = []
+            # List for scenario info
+            self.scenario_info = []
+        else:
+            self.launch_id = launch_id
 
 
     def start_suite(self, name, attributes):
