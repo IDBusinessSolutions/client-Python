@@ -14,12 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from .service import ReportPortalService
-from time import time
+from service import ReportPortalResultsReportingService
+from administration import ReportPortalAdministrationService
 import config
+from time import time
+from robot.api import logger
 
-__all__ = ('ReportPortalService',)
-
+__all__ = ('ReportPortalResultsReportingService', 'ReportPortalAdministrationService', 'POST_LOGBATCH_RETRY_COUNT')
 
 POST_LOGBATCH_RETRY_COUNT = 10
 
@@ -36,15 +37,15 @@ class reportportal_client:
 
     ROBOT_LISTENER_API_VERSION = 2
 
-    def __init__(self, scenario=True, launch_id=None):
+    def __init__(self, launch_id=None):
 
-        if scenario and launch_id is None:
-            self.rp_service = ReportPortalService(endpoint, project, token)
+        if launch_id is None:
+            self.rp_service = ReportPortalResultsReportingService(endpoint, project, token)
             self.launch_id = self.rp_service.start_launch(launch_name, launch_time, launch_doc)
 
             # Not sure what this is for
-            self.test_id = None
-            self.suite_id = None
+            self.current_test_id = None
+            self.current_suites = {}
 
             # List for scenario info
             self.scenario_info = []
@@ -54,34 +55,25 @@ class reportportal_client:
 
     def start_suite(self, name, attributes):
 
-        # standardise suite name
-        name = self.standardise_string(name)
+        # If the suite is named "test_suites", we don't want a suite started in report portal
+        if self.standardise_string(name) != "test_suites":
+            # Gets suite ID if it exists, else starts the suite
+            suite_id = self.rp_service.get_suite_id(attributes['source'])
 
-        # standardise suite and test names
-        for index, value in enumerate(attributes['suites']):
-            attributes['suites'][index] = self.standardise_string(value)
-
-        # standardise test names
-        for index, value in enumerate(attributes['tests']):
-            attributes['tests'][index] = self.standardise_string(value)
-
-        # Create dict of suite properties
-        suite_data = {}
-        suite_data['name'] = name
-        suite_data['child_suites'] = attributes['suites']
-        suite_data['tests'] = attributes['tests']
-        suite_data['parent_rp_id'] = self.find_parent_suite_for_suite(name)
-
-        # start Report Portal Item (returns report portal item ID)
-        suite_data['rp_id'] = self.rp_service.start_test_item(name, self.now(), "SUITE", parent_item_id=suite_data['parent_rp_id'])
-
-        # Append suite properties dict to suite info
-        self.scenario_info.append(suite_data)
+            # Add RP suite id to list of currently running suites. This is to allow stop_suite to stop RP suite.
+            self.current_suites[attributes['id']] = suite_id
 
 
     def end_suite(self, name, attributes):
+
+        # Get RP test status from test status mapping
         status = self.attribute_status(attributes["status"])
-        self.rp_service.finish_test_item(self.suite_id, self.now(), status)
+
+        # Get RP suite id from dictionary of currently running suites
+        suite_id = self.current_suites.get(attributes['id'])
+
+        # Stop RP suite
+        self.rp_service.finish_test_item(suite_id, self.now(), status)
 
 
     def start_test(self, name, attributes):
@@ -90,18 +82,18 @@ class reportportal_client:
         name = self.standardise_string(name)
 
         # Check for Parent item ID
-        parent = self.find_parent_suite_for_test(name)
+        parent_id = self.find_parent_suite_for_test(attributes['longname'])
 
         # Add tags to RP attributes (RP only accepts dictionary of attributes)
         tags_dict = {'tags': attributes['tags']}
 
         # Start test item
-        self.test_id = self.rp_service.start_test_item(name, self.now(), "TEST", description=attributes['doc'], attributes=tags_dict, parent_item_id=parent)
+        self.current_test_id = self.rp_service.start_test_item(name, self.now(), "TEST", description=attributes['doc'], attributes=tags_dict, parent_item_id=parent_id)
 
 
     def end_test(self, name, attributes):
         status = self.attribute_status(attributes["status"])
-        self.rp_service.finish_test_item(self.test_id, self.now(), status)
+        self.rp_service.finish_test_item(self.current_test_id, self.now(), status)
 
 
     def close(self):
@@ -133,15 +125,22 @@ class reportportal_client:
         return None
 
 
-    def find_parent_suite_for_test(self, test):
-        suite_count = len(self.scenario_info)
-        for i in range(0, suite_count):
-            if test in self.scenario_info[i]['tests']:
-                return self.scenario_info[i]['rp_id']
-        # I don't think it should ever get this far. Test _should_ be part of a suite?
-        return None
+    def find_parent_suite_for_test(self, test_suite_path):
+        """
+
+        :param test_suite_path:
+        :return:
+        """
+        test_suite_path = self.standardise_string(test_suite_path)
+        # Mak list of parent suites from path
+        suite_list = test_suite_path.split(".")
+        # Find the RP ID of the last suite
+        parent_suite_id = self.rp_service.get_parent_suite_id(suite_list)
+
+        return parent_suite_id
 
 
     def standardise_string(self, string):
         string = string.lower().replace(' ', '_')
         return string
+
