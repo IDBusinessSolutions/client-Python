@@ -52,6 +52,8 @@ class reportportal_client:
 
 
     def start_suite(self, name, attributes):
+        # Set Test stack to empty list
+        self.test_stack = []
 
         # If the suite is named "test_suites", we don't want a suite started in report portal
         if self.standardise_string(name) != "test_suites":
@@ -64,7 +66,6 @@ class reportportal_client:
 
 
     def end_suite(self, name, attributes):
-
         # Get RP test status from test status mapping
         status = self.attribute_status(attributes["status"])
 
@@ -80,6 +81,9 @@ class reportportal_client:
         # standardise test name
         name = self.standardise_string(name)
 
+        # Set kewyord stack to empty list
+        self.keyword_stack = []
+
         # Check for Parent item ID
         parent_id = self.find_parent_suite_for_test(attributes['longname'])
 
@@ -88,12 +92,38 @@ class reportportal_client:
 
         # Start test item
         self.current_test_id = self.rp_service.start_test_item(name, self.now(), "TEST", description=attributes['doc'], attributes=tags_dict, parent_item_id=parent_id)
+        self.test_stack.append(self.current_test_id)
 
 
     def end_test(self, name, attributes):
         status = self.attribute_status(attributes["status"])
+        self.test_stack.pop()
         self.rp_service.finish_test_item(self.current_test_id, self.now(), status)
 
+    def start_keyword(self, name, attributes):
+
+        if self.keyword_stack:
+            parent_id = self.keyword_stack[-1]
+        else:
+            parent_id = self.test_stack[-1]
+
+        self.current_keyword_uuid = self.rp_service.start_test_item(name, self.now(), "STEP", description=attributes['doc'], parent_item_id=parent_id)
+        self.keyword_stack.append(self.current_keyword_uuid)
+
+
+    def end_keyword(self, name, attributes):
+        status = self.attribute_status(attributes["status"])
+        self.keyword_stack.pop()
+        self.rp_service.finish_test_item(self.current_keyword_uuid, self.now(), status)
+
+    def log_message(self, message):
+        if self.keyword_stack:
+            parent_uuid = self.keyword_stack[-1]
+        elif self.test_stack:
+            parent_uuid = self.test_stack[-1]
+        else:
+            parent_uuid = None
+        self.rp_service.log(self.now(), message['message'], level=message['level'], item_id=parent_uuid)
 
     def close(self):
         self.rp_service.finish_launch(self.now())

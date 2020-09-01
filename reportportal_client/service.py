@@ -192,6 +192,7 @@ class ReportPortalResultsReportingService(ReportPortalServiceBase):
 
         return uuid
 
+
     def get_suite_id(self, suite_path):
         """Gets suite id for a given suite_path, and creates any suites that don't exist
         """
