@@ -43,12 +43,10 @@ class reportportal_client:
             self.rp_service = ReportPortalResultsReportingService(endpoint, project, token)
             self.launch_id = self.rp_service.start_launch(launch_name, launch_time, launch_doc)
 
-            # Not sure what this is for
+            # Variables do hold current test and a dict of running suites
             self.current_test_id = None
             self.current_suites = {}
 
-            # List for scenario info
-            self.scenario_info = []
         else:
             self.launch_id = launch_id
 
@@ -62,6 +60,7 @@ class reportportal_client:
 
             # Add RP suite id to list of currently running suites. This is to allow stop_suite to stop RP suite.
             self.current_suites[attributes['id']] = suite_id
+            foo = "bar"
 
 
     def end_suite(self, name, attributes):
@@ -135,7 +134,7 @@ class reportportal_client:
         # Mak list of parent suites from path
         suite_list = test_suite_path.split(".")
         # Find the RP ID of the last suite
-        parent_suite_id = self.rp_service.get_parent_suite_id(suite_list)
+        parent_suite_id = self.rp_service.get_parent_suite_uuid(suite_list)
 
         return parent_suite_id
 

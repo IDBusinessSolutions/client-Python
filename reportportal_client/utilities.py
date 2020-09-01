@@ -42,15 +42,22 @@ def _suite_path_to_list(path):
         p.pop(0)
 
     # Remove .robot and .txt extension - only the last element should have such an extension
-    if len(p) > 1:
+    if len(p) > 0:
         p[-1] = p[-1].replace(".robot", "")
         p[-1] = p[-1].replace(".txt", "")
 
     return p
 
+
+def standardise_string(string):
+    string = string.lower().replace(' ', '_')
+    return string
+
+
 def standardise_suite_name(name):
     name = name.replace(".robot", "")
     name = name.replace(".txt", "")
+    name = standardise_string(name)
 
     return name
 

@@ -144,6 +144,17 @@ class ReportPortalResultsReportingService(ReportPortalServiceBase):
 
         return content
 
+    def get_uu_id(self, id):
+        """Get the UUID for a test item with known id
+                """
+        url = uri_join(self.base_project_url_v1, "item", id)
+
+        r = self.get_from_url(url)
+        uuid = _get_json(r)['uuid']
+        logger.debug("Root suites: ".format(uuid))
+
+        return uuid
+
     def get_child_suites(self, suite_id):
         """Get child test suites for a given suite
         """
@@ -160,7 +171,7 @@ class ReportPortalResultsReportingService(ReportPortalServiceBase):
 
         return content
 
-    def get_parent_suite_id(self, test_path):
+    def get_parent_suite_uuid(self, test_path):
         """Get parent suite id for test
         """
 
@@ -172,9 +183,14 @@ class ReportPortalResultsReportingService(ReportPortalServiceBase):
             "filter.eq.type": "SUITE"
         }
         r = self.get_from_url(url, parameters=parameters)
-        id = _get_json(r)['content'][0]['uniqueId']
+        id = _get_json(r)['content'][0]['id']
 
-        return id
+        url = uri_join(self.base_project_url_v1, "item", id)
+
+        r = self.get_from_url(url, parameters=parameters)
+        uuid = _get_json(r)['uuid']
+
+        return uuid
 
     def get_suite_id(self, suite_path):
         """Gets suite id for a given suite_path, and creates any suites that don't exist
@@ -182,47 +198,58 @@ class ReportPortalResultsReportingService(ReportPortalServiceBase):
 
         # suite path is not itterable, so create list
         suite_path = _suite_path_to_list(suite_path)
+        root_suite = standardise_suite_name(suite_path[0])
 
         # Look in root for highest level suite
         root_suites = self.get_root_suites()
         current_suite_id = None
+        current_suite_uuid = None
         found = False
         logger.debug("get_suite_id: root suites: {}".format(root_suites))
 
-        # Look for top level suite in RP launch root suites.
+        # Look for top level suite in RP launch root suites. (suite is a dict)
         for suite in root_suites:
             # remove .robot from suite name
             suite_name = standardise_suite_name(suite['name'])
 
-            if suite_name == suite_path[0].lower():
-                current_suite_id = suite['uniqueId']
+            if suite_name == root_suite:
+                current_suite_id = suite['id']
+                current_suite_uuid = self.get_uu_id(current_suite_id)
                 found = True
                 logger.debug("get_suite_id: found high level suite at root launch level")
                 break
 
+        # If root suite doesn't already exist, create it and subsequent suites
         if not found:
-            # Create suite if not found in root level
-            name =  standardise_suite_name(suite_path[0])
-            current_suite_id = self.start_test_item(name, self.now(), "SUITE")
-            logger.debug("get_suite_id: Created Report Portal Suite at root launch level with suite id {}".format(current_suite_id))
+            current_suite_uuid = self.start_test_item(root_suite, self.now(), "SUITE")
+            logger.debug(current_suite_uuid)
+            # By this point the root-level suite has just been created, so each remaining suite needs creating too
+            if len(suite_path) > 1:
+                for path_element in suite_path[1:]:
+                    path_element = standardise_suite_name(path_element)
+                    current_suite_uuid = self.start_test_item(path_element, self.now(), "SUITE", parent_item_id=current_suite_uuid)
 
-            # Avoiding index out of range error for root suites
+        # By this point the root suit has either been created or already existed
+        # If there are further suites, see if they exist, or create them
+        # If the root suite already existed, we need to check to see if the remaning child suites exist.
+        else:
             if len(suite_path) > 1:
                 # Find or create child suites for remainder of the suite path
                 for path_element in suite_path[1:]:
                     found = False
                     child_suites = self.get_child_suites(current_suite_id)
                     for suite in child_suites:
-                        if suite['name'].lower() == path_element[0].lower():
+                        # suite is a dict
+                        if suite['name'].lower() == path_element.lower():
                             current_suite_id = suite['id']
+                            current_suite_uuid = self.get_uu_id(current_suite_id)
                             found = True
-                            logger.debug("get_suite_id: found child suite with suite id {}".format(current_suite_id))
                             break
                     if not found:
                         # Create suite
-                        current_suite_id = self.start_test_item(path_element, self.now(), "SUITE")
-                        logger.debug("get_suite_id: Created Report Portal child Suite with suite id {}".format(current_suite_id))
-        return current_suite_id
+                        current_suite_id = self.start_test_item(path_element, self.now(), "SUITE", parent_item_id=current_suite_uuid)
+
+        return current_suite_uuid
 
 
     def now(self):
