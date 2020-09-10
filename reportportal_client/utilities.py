@@ -1,5 +1,5 @@
 import six
-import os
+from time import time
 
 from .errors import ResponseError, EntryCreatedError, OperationCompletionError
 
@@ -28,38 +28,6 @@ def _dict_to_payload(dictionary):
         for key, value in sorted(dictionary.items())
     ]
 
-
-def _suite_path_to_list(path):
-    """Convert a file path to a list
-
-    """
-    p = os.path.abspath(path)
-    p = p.split(os.sep)
-    # get test suites index
-    test_suites_idx = p.index('test_suites')
-    # remove path components up to and including the test_suites level
-    for idx in range(0, int(test_suites_idx) + 1):
-        p.pop(0)
-
-    # Remove .robot and .txt extension - only the last element should have such an extension
-    if len(p) > 0:
-        p[-1] = p[-1].replace(".robot", "")
-        p[-1] = p[-1].replace(".txt", "")
-
-    return p
-
-
-def standardise_string(string):
-    string = string.lower().replace(' ', '_')
-    return string
-
-
-def standardise_suite_name(name):
-    name = name.replace(".robot", "")
-    name = name.replace(".txt", "")
-    name = standardise_string(name)
-
-    return name
 
 def _get_id(response):
     """Get id from Response.
@@ -161,3 +129,9 @@ def uri_join(*uri_parts):
 
     """
     return '/'.join(str(s).strip('/').strip('\\') for s in uri_parts)
+
+
+def now():
+    time_now = str(int(time() * 1000))
+
+    return time_now
