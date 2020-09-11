@@ -19,7 +19,6 @@ import requests
 import uuid
 import pkg_resources
 import platform
-from time import time
 from robot.api import logger
 
 import six
@@ -63,10 +62,10 @@ class ReportPortalResultsReportingService(ReportPortalServiceBase):
                                                                   retries=retries)
         self.project = project
         self.is_skipped_an_issue = is_skipped_an_issue
-        self.base_url_v1 = uri_join(self.endpoint, "api/v1", self.project)
-        self.base_url_v2 = uri_join(self.endpoint, "api/v2", self.project)
-        self.base_project_url_v1 = self.base_url_v1
-        self.base_project_url_v2 = self.base_url_v2
+        self.base_url_v1 = uri_join(self.endpoint, "api/v1")
+        self.base_url_v2 = uri_join(self.endpoint, "api/v2")
+        self.base_project_url_v1 = uri_join(self.base_url_v1, self.project)
+        self.base_project_url_v2 = uri_join(self.base_url_v1, self.project)
         self.max_pool_size = 50
 
         self.session = requests.Session()
@@ -83,8 +82,6 @@ class ReportPortalResultsReportingService(ReportPortalServiceBase):
     def terminate(self, *args, **kwargs):
         """Call this to terminate the service."""
         pass
-        self.base_project_url_v1 = uri_join(self.base_url_v1, self.project)
-        self.base_project_url_v2 = uri_join(self.base_url_v2, self.project)
         self.launch_uuid = None
 
 
@@ -161,19 +158,6 @@ class ReportPortalResultsReportingService(ReportPortalServiceBase):
         content = _get_json(r)['content']
 
         return content
-
-
-    def find_parent_suite_for_test(self, test_suite_path):
-        """
-        :param test_suite_path:
-        :return:
-        """
-        # Make list of parent suites from path
-        suite_list = test_suite_path.split(".")
-        # Find the RP ID of the last suite
-        parent_suite_id = self.get_parent_suite_uuid(suite_list)
-
-        return parent_suite_id
 
 
     def get_parent_suite_uuid(self, test_path):
@@ -254,7 +238,6 @@ class ReportPortalResultsReportingService(ReportPortalServiceBase):
                         current_suite_id = self.start_test_item(path_element, now(), "SUITE", parent_item_id=current_suite_uuid)
 
         return current_suite_uuid
-
 
 
     def connect_to_launch(self, launch_uuid):
