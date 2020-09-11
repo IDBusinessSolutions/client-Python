@@ -49,11 +49,8 @@ def _get_msg(response):
     :param response: Response object
     :return: data: json data
     """
-    try:
-        return _get_data(response)
-    except KeyError:
-        raise OperationCompletionError(
-            "No 'message' in response: {0}".format(response.text))
+    return _get_data(response)
+
 
 
 def _get_data(response):
