@@ -182,6 +182,36 @@ class ReportPortalResultsReportingService(ReportPortalServiceBase):
         return uuid
 
 
+    def suite_in_list(self, list, required_suite, parent_uuid=None):
+        """
+        Take a response from report portal api (which is a list of dicts) and looks for the required suite,
+        creating it if not present. The suite uuid is returned
+
+        :param list:
+        :param required_suite:
+        :param parent_uuid:
+        :return:
+        """
+        current_suite_uuid = None
+        found = False
+
+
+        # Suite is a dict
+        for suite in list:
+            suite_name = suite['name']
+            if suite_name.lower() == required_suite.lower():
+                current_suite_id = suite['id']
+                current_suite_uuid = self.get_uuid(current_suite_id)
+                found = True
+                break
+
+        # If root suite doesn't already exist, create it and subsequent suites
+        if not found:
+            current_suite_uuid = self.start_test_item(required_suite, now(), "SUITE", parent_item_id=parent_uuid)
+
+        return current_suite_uuid
+
+
     def get_suite_id(self, suite_path):
         """
         Gets suite id for a given suite_path, and creates any suites that don't exist
@@ -195,47 +225,16 @@ class ReportPortalResultsReportingService(ReportPortalServiceBase):
         # Look in root for highest level suite
         root_suites = self.get_root_suites()
         current_suite_id = None
-        current_suite_uuid = None
-        found = False
 
-        # Look for top level suite in RP launch root suites. (suite is a dict)
-        for suite in root_suites:
-            # remove .robot from suite name
-            suite_name = suite['name']
-
-            if suite_name == root_suite:
-                current_suite_id = suite['id']
-                current_suite_uuid = self.get_uuid(current_suite_id)
-                found = True
-                break
-
-        # If root suite doesn't already exist, create it and subsequent suites
-        if not found:
-            current_suite_uuid = self.start_test_item(root_suite, now(), "SUITE")
-            # By this point the root-level suite has just been created, so each remaining suite needs creating too
-            if len(suite_path) > 1:
-                for path_element in suite_path[1:]:
-                    current_suite_uuid = self.start_test_item(path_element, now(), "SUITE", parent_item_id=current_suite_uuid)
+        current_suite_uuid = self.suite_in_list(root_suites, root_suite)
 
         # By this point the root suit has either been created or already existed
         # If there are further suites, see if they exist, or create them
-        # If the root suite already existed, we need to check to see if the remaning child suites exist.
-        else:
-            if len(suite_path) > 1:
-                # Find or create child suites for remainder of the suite path
-                for path_element in suite_path[1:]:
-                    found = False
-                    child_suites = self.get_child_suites(current_suite_id)
-                    for suite in child_suites:
-                        # suite is a dict
-                        if suite['name'].lower() == path_element.lower():
-                            current_suite_id = suite['id']
-                            current_suite_uuid = self.get_uuid(current_suite_id)
-                            found = True
-                            break
-                    if not found:
-                        # Create suite
-                        current_suite_id = self.start_test_item(path_element, now(), "SUITE", parent_item_id=current_suite_uuid)
+        if len(suite_path) > 1:
+            # Find or create child suites for remainder of the suite path
+            for path_element in suite_path[1:]:
+                child_suites = self.get_child_suites(current_suite_id)
+                current_suite_uuid = self.suite_in_list(child_suites, path_element, current_suite_uuid)
 
         return current_suite_uuid
 
