@@ -1,5 +1,6 @@
 import six
 from time import time
+import datetime
 
 from .errors import ResponseError, EntryCreatedError, OperationCompletionError
 
@@ -129,6 +130,18 @@ def uri_join(*uri_parts):
 
 
 def now():
-    time_now = str(int(time() * 1000))
+    time_now = datetime.datetime.utcnow().isoformat()
 
     return time_now
+
+
+def to_isoformat(date_time):
+    if isinstance(date_time, str):
+        date_time = datetime.datetime.strptime(date_time, '%Y-%m-%dT%H:%M:%S.%f')
+
+    if isinstance(date_time, datetime.datetime):
+        time_isoformat = date_time.isoformat()
+    else:
+        raise Exception("Time is not in datetime format")
+
+    return time_isoformat
