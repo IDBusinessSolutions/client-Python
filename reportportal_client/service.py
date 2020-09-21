@@ -25,8 +25,9 @@ import six
 from six.moves.collections_abc import Mapping
 from requests.adapters import HTTPAdapter
 
+
 from client_base import ReportPortalServiceBase
-from utilities import uri_join, _get_id, _get_msg, _dict_to_payload, _get_json, _get_data, now
+from utilities import uri_join, _get_id, _get_msg, _dict_to_payload, _get_json, _get_data, now, to_isoformat
 
 
 POST_LOGBATCH_RETRY_COUNT = 10
@@ -94,6 +95,10 @@ class ReportPortalResultsReportingService(ReportPortalServiceBase):
         """Start a new launch with the given parameters."""
         if attributes and isinstance(attributes, dict):
             attributes = _dict_to_payload(attributes)
+
+        # Time needs to be in iso format
+        start_time = to_isoformat(start_time)
+
         data = {
             "name": name,
             "description": description,
@@ -253,6 +258,10 @@ class ReportPortalResultsReportingService(ReportPortalServiceBase):
         # process log batches firstly:
         if self._batch_logs:
             self.log_batch([], force=True)
+
+        # end_time need to be in isoformat
+        end_time = to_isoformat(end_time)
+
         data = {
             "endTime": end_time,
             "status": status
@@ -291,6 +300,9 @@ class ReportPortalResultsReportingService(ReportPortalServiceBase):
             attributes = _dict_to_payload(attributes)
         if parameters:
             parameters = _dict_to_payload(parameters)
+
+        # Start time required in iso format
+        start_time = to_isoformat(start_time)
 
         data = {
             "name": name,
@@ -356,6 +368,9 @@ class ReportPortalResultsReportingService(ReportPortalServiceBase):
         if attributes and isinstance(attributes, dict):
             attributes = _dict_to_payload(attributes)
 
+        # End time required in iso format
+        end_time = to_isoformat(end_time)
+
         data = {
             "endTime": end_time,
             "status": status,
@@ -404,6 +419,10 @@ class ReportPortalResultsReportingService(ReportPortalServiceBase):
         :param item_id:  id of item
         :return: id of item from response
         """
+
+        # time needs to be in isoformat
+        time = to_isoformat(time)
+
         data = {
             "launchUuid": self.launch_uuid,
             "time": time,
