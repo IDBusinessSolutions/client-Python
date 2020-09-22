@@ -129,12 +129,6 @@ def uri_join(*uri_parts):
     return '/'.join(str(s).strip('/').strip('\\') for s in uri_parts)
 
 
-def now():
-    time_now = datetime.datetime.utcnow().isoformat()
-
-    return time_now
-
-
 def to_isoformat(date_time):
     if isinstance(date_time, str):
         date_time = datetime.datetime.strptime(date_time, '%Y-%m-%dT%H:%M:%S.%f')

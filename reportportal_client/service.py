@@ -27,7 +27,7 @@ from requests.adapters import HTTPAdapter
 
 
 from client_base import ReportPortalServiceBase
-from utilities import uri_join, _get_id, _get_msg, _dict_to_payload, _get_json, _get_data, now, to_isoformat
+from utilities import uri_join, _get_id, _get_msg, _dict_to_payload, _get_json, _get_data, to_isoformat
 
 
 POST_LOGBATCH_RETRY_COUNT = 10
@@ -187,7 +187,7 @@ class ReportPortalResultsReportingService(ReportPortalServiceBase):
         return uuid
 
 
-    def suite_in_list(self, list, required_suite, parent_uuid=None):
+    def suite_in_list(self, list, required_suite, start_time, parent_uuid=None):
         """
         Take a response from report portal api (which is a list of dicts) and looks for the required suite,
         creating it if not present. The suite uuid is returned
@@ -212,12 +212,12 @@ class ReportPortalResultsReportingService(ReportPortalServiceBase):
 
         # If root suite doesn't already exist, create it and subsequent suites
         if not found:
-            current_suite_uuid = self.start_test_item(required_suite, now(), "SUITE", parent_item_id=parent_uuid)
+            current_suite_uuid = self.start_test_item(required_suite, start_time, "SUITE", parent_item_id=parent_uuid)
 
         return current_suite_uuid
 
 
-    def get_suite_id(self, suite_path):
+    def get_suite_id(self, suite_path, start_time):
         """
         Gets suite id for a given suite_path, and creates any suites that don't exist
 
@@ -225,13 +225,15 @@ class ReportPortalResultsReportingService(ReportPortalServiceBase):
         :return:
         """
 
+        start_time = to_isoformat(start_time)
+
         root_suite = suite_path[0]
 
         # Look in root for highest level suite
         root_suites = self.get_root_suites()
         current_suite_id = None
 
-        current_suite_uuid = self.suite_in_list(root_suites, root_suite)
+        current_suite_uuid = self.suite_in_list(root_suites, root_suite, start_time)
 
         # By this point the root suit has either been created or already existed
         # If there are further suites, see if they exist, or create them
@@ -239,7 +241,7 @@ class ReportPortalResultsReportingService(ReportPortalServiceBase):
             # Find or create child suites for remainder of the suite path
             for path_element in suite_path[1:]:
                 child_suites = self.get_child_suites(current_suite_id)
-                current_suite_uuid = self.suite_in_list(child_suites, path_element, current_suite_uuid)
+                current_suite_uuid = self.suite_in_list(child_suites, path_element, start_time, parent_uuid=current_suite_uuid)
 
         return current_suite_uuid
 
