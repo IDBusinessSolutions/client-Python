@@ -14,8 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from .service import ReportPortalService
+from service import ReportPortalResultsReportingService
+from administration import ReportPortalAdministrationService
 
-__all__ = ('ReportPortalService',)
+
+__all__ = ('ReportPortalResultsReportingService', 'ReportPortalAdministrationService', 'POST_LOGBATCH_RETRY_COUNT')
 
 POST_LOGBATCH_RETRY_COUNT = 10
