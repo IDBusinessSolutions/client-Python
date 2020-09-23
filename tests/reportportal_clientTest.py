@@ -140,7 +140,6 @@ class reportportal_clientMethods(unittest.TestCase):
     
     def test_finish_test_item_test(self):
         response = self.service.finish_test_item(self.existing_test_id, datetime.utcnow(), 'SKIPPED')
-        print(response)
         assert 'successfully finished' in response.get('message')
 
     def test_get_item_id_by_uuid(self):
