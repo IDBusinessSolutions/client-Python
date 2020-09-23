@@ -87,6 +87,15 @@ class reportportal_clientMethods(unittest.TestCase):
         parent_uuid = self.service.get_parent_suite_uuid(test_path)
         assert parent_uuid == self.test_suite_2_uuid
 
+    def test_get_parent_suite_uuid_incorrect_path(self):
+        try:
+            test_path = ['foo', 'bar', 'test']
+            self.service.get_parent_suite_uuid(test_path)
+            error_message = None
+        except Exception as e:
+            error_message = e.message
+        assert 'list index out of range' in error_message
+
     def test_suite_in_list_existing(self):
         list = self.service.get_child_suites(self.test_suite_1_internal_id)
         suite_uuid = self.service.suite_in_list(list, self.test_suite_2_name, datetime.utcnow())
@@ -114,6 +123,16 @@ class reportportal_clientMethods(unittest.TestCase):
     def test_start_test_item_test(self):
         test_id = self.service.start_test_item('Start Test test', datetime.utcnow(), 'TEST', parent_item_id=self.test_suite_1_uuid)
         assert UUID(test_id)
+
+    def test_start_test_item_test_invalid_parent(self):
+        try:
+            self.service.start_test_item('Start Test test', datetime.utcnow(), 'TEST',
+                                                   parent_item_id='52a568ec-fd8c-11ea-adc1-0242ac120002')
+            error_message = None
+        except Exception as e:
+            error_message = e.message
+
+        assert 'Did you use correct Test Item ID' in error_message
 
     def test_start_test_item_keyword(self):
         keyword_id = self.service.start_test_item('Start Test keyword', datetime.utcnow(), 'STEP', parent_item_id=self.test_test_uuid)
