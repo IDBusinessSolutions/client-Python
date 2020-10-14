@@ -2,7 +2,8 @@ import unittest
 from uuid import UUID
 from datetime import datetime
 
-from reportportal_client import ReportPortalResultsReportingService
+from reportportal_client import ReportPortalResultsReportingService, ReportPortalAdministrationService
+from reportportal_client.utilities import _get_id, _get_json
 from config import *
 
 
@@ -141,6 +142,54 @@ class reportportal_clientMethods(unittest.TestCase):
         log_id = self.service.log(datetime.utcnow(), 'This is a log message', level='INFO',
                                   item_id=self.test_suite_1_uuid)
         assert UUID(log_id)
+
+
+class reportportal_clientAdminMethods(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        now = datetime.utcnow().strftime('%d%m%y_%H%M%S')
+        cls.admin_service = ReportPortalAdministrationService(endpoint, token)
+        cls.project_name_1 = "python_client_1{}".format(now)
+        print(cls.project_name_1)
+        cls.project_name_2 = "python_client_2{}".format(now)
+        cls.project_name_3 = "python_client_3{}".format(now)
+
+        # create 2 projects for use in tests
+        cls.project_1_id = _get_id(cls.admin_service.create_project(cls.project_name_1))
+        cls.project_2_id = _get_id(cls.admin_service.create_project(cls.project_name_2))
+
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.admin_service.delete_project(cls.project_1_id)
+        cls.admin_service.delete_project(cls.project_2_id)
+
+
+    def test_get_all_project_names(self):
+        projects = self.admin_service.get_all_project_names()
+        self.assertIsInstance(projects, list)
+
+    def test_create_project(self):
+        response = self.admin_service.create_project(self.project_name_3)
+        self.project_3_id = _get_id(response)
+        self.assertIsInstance(self.project_3_id, int)
+
+    def test_update_project_settings(self):
+        settings = {
+                      "configuration": {
+                        "attributes": {
+                          "job.keepLaunches": "Forever"
+                        }
+                      }
+                    }
+        response = self.admin_service.update_project_settings(self.project_name_1, settings)
+        message = _get_json(response)['message']
+        self.assertEqual(message, "Project with name = '{}' is successfully updated.".format(self.project_name_1))
+
+    def test_delete_project(self):
+        response = self.admin_service.delete_project(self.project_2_id)
+        message = _get_json(response)['message']
+        self.assertEqual(message, "Project with id = '{}' has been successfully deleted.".format(self.project_2_id))
 
 if __name__ == '__main__':
     unittest.main()
