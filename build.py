@@ -9,7 +9,8 @@ library_name = 'reportportal_client'
 packages_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'Packages'))
 
 #version
-execfile(os.path.join(os.path.dirname(__file__), library_name, 'version.py'))
+file = os.path.join(os.path.dirname(__file__), library_name, 'version.py')
+exec(open(file).read())
 
 #generate the package
 setup.run_setup(VERSION, ['sdist'])
@@ -27,4 +28,4 @@ for folder in egg_info_folders:
     shutil.rmtree(folder)
     
 #build confirmation message
-print "Build successful"
+print("Build successful")
