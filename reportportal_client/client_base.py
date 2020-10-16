@@ -1,7 +1,7 @@
 import requests
 from requests.adapters import HTTPAdapter
 
-from .utilities import uri_join
+from .utilities import uri_join, _get_json
 
 
 class ReportPortalServiceBase(object):
@@ -59,6 +59,9 @@ class ReportPortalServiceBase(object):
         if json_data is None:
             json_data = {}
         reply = self.session.post(url=url, json=json_data, verify=self.verify_ssl)
+        if not reply.ok:
+            message = _get_json(reply)['message']
+            raise ReportPortalError(reply.status_code, message)
         return reply
 
     def delete_url(self, url, json_data=None):
@@ -66,3 +69,8 @@ class ReportPortalServiceBase(object):
             json_data = {}
         reply = self.session.delete(url=url, json=json_data, verify=self.verify_ssl)
         return reply
+
+class ReportPortalError(Exception):
+    def __init__(self, expression, message):
+        self.expression = expression
+        self.message = message

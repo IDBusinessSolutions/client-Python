@@ -4,6 +4,7 @@ from datetime import datetime
 
 from reportportal_client import ReportPortalResultsReportingService, ReportPortalAdministrationService
 from reportportal_client.utilities import _get_id, _get_json
+from reportportal_client.client_base import ReportPortalError
 from config import *
 
 
@@ -150,9 +151,9 @@ class reportportal_clientAdminMethods(unittest.TestCase):
         now = datetime.utcnow().strftime('%d%m%y_%H%M%S')
         cls.admin_service = ReportPortalAdministrationService(endpoint, token)
         cls.project_name_1 = "python_client_1{}".format(now)
-        print(cls.project_name_1)
         cls.project_name_2 = "python_client_2{}".format(now)
         cls.project_name_3 = "python_client_3{}".format(now)
+        cls.project_name_4 = "python.client.4{}".format(now)
 
         # create 2 projects for use in tests
         cls.project_1_id = _get_id(cls.admin_service.create_project(cls.project_name_1))
@@ -164,7 +165,6 @@ class reportportal_clientAdminMethods(unittest.TestCase):
         cls.admin_service.delete_project(cls.project_1_id)
         cls.admin_service.delete_project(cls.project_2_id)
 
-
     def test_get_all_project_names(self):
         projects = self.admin_service.get_all_project_names()
         self.assertIsInstance(projects, list)
@@ -173,6 +173,10 @@ class reportportal_clientAdminMethods(unittest.TestCase):
         response = self.admin_service.create_project(self.project_name_3)
         self.project_3_id = _get_id(response)
         self.assertIsInstance(self.project_3_id, int)
+
+    def test_create_project_invalid_name(self):
+        with self.assertRaises(ReportPortalError):
+            self.admin_service.create_project(self.project_name_2)
 
     def test_update_project_settings(self):
         settings = {
