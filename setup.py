@@ -6,6 +6,7 @@ from os.path import join, dirname
 
 __version__ = '5.0.2'
 
+
 def run_setup(version, scriptargs):
     setup(
         name='reportportal-client',
@@ -23,11 +24,12 @@ def run_setup(version, scriptargs):
             'Programming Language :: Python :: 3.7',
             'Programming Language :: Python :: 3.8'
         ],
-        install_requires=['requests>=2.4.2', 'six'],
+        install_requires=['requests>=2.4.2', 'six', 'robotframework'],
         zip_safe=False,
         script_args = scriptargs
 
     )
 if __name__=="__main__":
-    execfile(join(dirname(__file__),'reportportal_client', 'version.py'))
+    file = join(dirname(__file__),'reportportal_client', 'version.py')
+    exec(open(file).read())
     run_setup(VERSION, sys.argv[1:])
