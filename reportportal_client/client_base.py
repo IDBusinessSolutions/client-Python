@@ -1,7 +1,7 @@
 import requests
 from requests.adapters import HTTPAdapter
 
-from utilities import uri_join
+from .utilities import uri_join
 
 
 class ReportPortalServiceBase(object):

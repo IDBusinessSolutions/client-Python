@@ -19,15 +19,15 @@ import requests
 import uuid
 import pkg_resources
 import platform
-from robot.api import logger
 
 import six
 from six.moves.collections_abc import Mapping
 from requests.adapters import HTTPAdapter
+from robot.api import logger
 
 
-from client_base import ReportPortalServiceBase
-from utilities import uri_join, _get_id, _get_msg, _dict_to_payload, _get_json, _get_data, to_isoformat
+from .client_base import ReportPortalServiceBase
+from .utilities import uri_join, _get_id, _get_msg, _dict_to_payload, _get_json, _get_data, to_isoformat
 
 
 POST_LOGBATCH_RETRY_COUNT = 10

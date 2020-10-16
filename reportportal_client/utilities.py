@@ -1,5 +1,4 @@
 import six
-from time import time
 import datetime
 
 from .errors import ResponseError, EntryCreatedError, OperationCompletionError
