@@ -19,15 +19,14 @@ import requests
 import uuid
 import pkg_resources
 import platform
-from robot.api import logger
 
 import six
 from six.moves.collections_abc import Mapping
 from requests.adapters import HTTPAdapter
 
 
-from client_base import ReportPortalServiceBase
-from utilities import uri_join, _get_id, _get_msg, _dict_to_payload, _get_json, _get_data, to_isoformat
+from .client_base import ReportPortalServiceBase
+from .utilities import uri_join, _get_id, _get_msg, _dict_to_payload, _get_json, _get_data, to_isoformat
 
 
 POST_LOGBATCH_RETRY_COUNT = 10
@@ -109,7 +108,6 @@ class ReportPortalResultsReportingService(ReportPortalServiceBase):
         url = uri_join(self.base_project_url_v2, "launch")
         r = self.post_to_url(url, data)
         self.launch_uuid = _get_id(r)
-        logger.trace("start_launch - ID: {}".format(self.launch_uuid))
         return self.launch_uuid
 
 
@@ -119,7 +117,6 @@ class ReportPortalResultsReportingService(ReportPortalServiceBase):
         url = uri_join(self.base_project_url_v1, "launch", "uuid", self.launch_uuid)
         r = self.get_from_url(url)
         launch_internal_id = _get_id(r)
-        logger.debug("get_launch_internal_id - ID: %s", launch_internal_id)
         return launch_internal_id
 
 
@@ -439,7 +436,6 @@ class ReportPortalResultsReportingService(ReportPortalServiceBase):
         else:
             url = uri_join(self.base_project_url_v2, "log")
             r = self.post_to_url(url, data)
-            logger.debug("log - ID: {}".format(item_id))
             return _get_id(r)
 
     def log_batch(self, log_data, item_id=None, force=False):
@@ -502,7 +498,6 @@ class ReportPortalResultsReportingService(ReportPortalServiceBase):
                     files=files,
                     verify=self.verify_ssl
                 )
-                logger.debug("log_batch - ID: {}".format(item_id))
 
                 self._batch_logs = []
                 return _get_data(r)

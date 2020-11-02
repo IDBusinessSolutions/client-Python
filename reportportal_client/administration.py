@@ -27,3 +27,43 @@ class ReportPortalAdministrationService(ReportPortalServiceBase):
         url = uri_join(self.base_url_v1, 'project', 'names')
         response = self.get_from_url(url)
         return _get_json(response)
+
+    def create_project(self, project_name):
+        """
+        Create a Report Portal project
+        :param project_name: NAme of the project to create
+        :return:
+        """
+        url = uri_join(self.base_url_v1, "project")
+        data = {
+          "entryType": "INTERNAL",
+          "projectName": "{}".format(project_name)
+        }
+        response = self.post_to_url(url, data)
+        return response
+
+    def delete_project(self, project_id):
+        """
+        Delete a Report Portal project with the specified project_id
+        :param project_id: ID of the project to delete
+        :return:
+        """
+        url = uri_join(self.base_url_v1, 'project', project_id)
+        data = {
+          "projectId": "{}".format(project_id)
+        }
+        response = self.delete_url(url, data)
+        return response
+
+    def update_project_settings(self, project_name, settings):
+        """
+        Update settings for project_name
+        :param project_name: Name of project
+        :param settings: project settings in json format - See Report Portal API documentation
+        :return: 
+        """
+        url = uri_join(self.base_url_v1, 'project', project_name)
+        data = settings
+        response = self.put_to_url(url, data)
+
+        return response
