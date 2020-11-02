@@ -90,7 +90,7 @@ class reportportal_clientMethods(unittest.TestCase):
         assert parent_uuid == self.test_suite_2_uuid
 
     def test_get_parent_suite_uuid_incorrect_path(self):
-        with self.assertRaisesRegexp(Exception, 'list index out of range'):
+        with self.assertRaisesRegex(Exception, 'list index out of range'):
             test_path = ['foo', 'bar', 'test']
             self.service.get_parent_suite_uuid(test_path)
 
@@ -123,7 +123,7 @@ class reportportal_clientMethods(unittest.TestCase):
         assert UUID(test_id)
 
     def test_start_test_item_test_invalid_parent(self):
-        with self.assertRaisesRegexp(Exception, 'Did you use correct Test Item ID'):
+        with self.assertRaisesRegex(Exception, 'Did you use correct Test Item ID'):
             self.service.start_test_item('Start Test test', datetime.utcnow(), 'TEST',
                                                    parent_item_id='52a568ec-fd8c-11ea-adc1-0242ac120002')
 
