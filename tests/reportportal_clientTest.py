@@ -200,7 +200,7 @@ class reportportal_clientHelperMethods(unittest.TestCase):
 
     def test_tag_attritubes(self):
         tags = ['foo', 'BAR', 'Spam', 'eggs']
-        # Report Portal expects tag list to be in a particlar (strange?) format
+        # Report Portal expects tag list to be in a particular format
         if tags:
             tags[0] = 'tag_list:{}'.format(tags[0])
         tags_rp = gen_attributes(tags)
