@@ -5,6 +5,7 @@ from datetime import datetime
 from reportportal_client import ReportPortalResultsReportingService, ReportPortalAdministrationService
 from reportportal_client.utilities import _get_id, _get_json
 from reportportal_client.client_base import ReportPortalError
+from reportportal_client.helpers import gen_attributes
 from config import *
 
 
@@ -194,6 +195,16 @@ class reportportal_clientAdminMethods(unittest.TestCase):
         response = self.admin_service.delete_project(self.project_2_id)
         message = _get_json(response)['message']
         self.assertEqual(message, "Project with id = '{}' has been successfully deleted.".format(self.project_2_id))
+
+class reportportal_clientHelperMethods(unittest.TestCase):
+
+    def test_tag_attritubes(self):
+        tags = ['foo', 'BAR', 'Spam', 'eggs']
+        # Report Portal expects tag list to be in a particular format
+        if tags:
+            tags[0] = 'tag_list:{}'.format(tags[0])
+        tags_rp = gen_attributes(tags)
+        assert tags_rp == [{'key': 'tag_list', 'value': 'foo'}, {'value': 'BAR'}, {'value': 'Spam'}, {'value': 'eggs'}]
 
 if __name__ == '__main__':
     unittest.main()

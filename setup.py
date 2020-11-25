@@ -24,7 +24,7 @@ def run_setup(version, scriptargs):
             'Programming Language :: Python :: 3.7',
             'Programming Language :: Python :: 3.8'
         ],
-        install_requires=['requests>=2.4.2', 'six'],
+        install_requires=['requests>=2.4.2', 'six>=1.13.0'],
         zip_safe=False,
         script_args = scriptargs
 
